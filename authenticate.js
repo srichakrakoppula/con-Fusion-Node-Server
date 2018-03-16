@@ -23,10 +23,12 @@ opts.secretOrKey = config.secretKey;
 exports.jwtPassport = passport.use(new JwtStrategy(opts,
     (jwt_payload,done)=>{
         console.log('JWT payload: ', jwt_payload);
-        User.findOne({_id: jwt_payload._id}, (err, user)=>{
+        User.findOne({_id: jwt_payload._id, admin: jwt_payload.admin}, (err, user)=>{
+            console.log(user);
             if(err){
                 return done(err,false)
             }else if(user){
+                console.log("Authenticated user (y)");
                 return done(null, user);
             }else{
                 return done(null,false);
@@ -35,4 +37,14 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
     })
 );
 
-exports.verifyUser = passport.authenticate('jwt',{session: false})
+exports.verifyUser = passport.authenticate('jwt',{session: false});
+exports.verifyAdmin = (req, res, next)=>{
+    if(req.user.admin){
+        console.log("Yayy!! Admin is here!");
+        next();
+    }else{
+        console.log('Nope. You\'re not an admin');
+        var err = new Error('You are not authorized to perform this operation!')
+        next(err);
+    }
+};
